@@ -3,6 +3,7 @@ class Calculator {
         this.previousValue = previousValue
         this.currentValue = currentValue
         this.clear()
+        this.computed = false  // Add computed variable so that Calculator can save state after compute is called.  This fixes issue with appending numbers to result instead of starting again.
     }
 
     clear() {
@@ -16,7 +17,8 @@ class Calculator {
     }
 
     appendNumber(number) {
-        this.currentVal = this.currentVal + number
+        if (number === '.' && this.currentVal.includes('.')) return  // Logic to stop multiple '.' being added to the calculator.
+        this.currentVal = this.currentVal.toString() + number.toString()
     }
 
     chooseOperation(operation) {
@@ -51,14 +53,16 @@ class Calculator {
             default:
                 return
         }
-        this.currentVal = result
+        this.currentVal = result.toFixed(2)
+        this.computed = true;  // computed being set to true.
+        this.operation = undefined;
+        this.previousVal = "";
    }
 
    updateDisplay() {
     this.currentValue.innerText = this.currentVal
     if (this.operation != null) {
-        this.previousValue.innerText =
-          `${(this.previousVal)} ${this.operation}`
+        this.previousValue.innerText = `${(this.previousVal)} ${this.operation}`
     } else {
         this.previousValue.innerText = ''
     }
@@ -79,14 +83,27 @@ const currentValue = document.querySelector('[data-current-operand]')
 const calculator = new Calculator(previousValue, currentValue)
 
 //console.log(numbers)
-
-for(let i = 0; i < numbers.length; i++) {
+//Convert for loop below to forEach on array object line 95.
+/*for(let i = 0; i < numbers.length; i++) {
     //console.log(numbers[i].innerText)
     numbers[i].addEventListener('click', function(){
         calculator.appendNumber(numbers[i].innerText)
         calculator.updateDisplay()
     })
-}
+}*/
+
+numbers.forEach(button => {
+    button.addEventListener('click', function() {
+
+        if(calculator.previousVal === "" && calculator.currentVal !== "" && calculator.computed) {
+            calculator.currentVal = "";
+            calculator.computed = false;
+        }
+
+        calculator.appendNumber(button.innerText)
+        calculator.updateDisplay()
+    })
+})
 
 operations.forEach(button => {
     button.addEventListener('click', function() {
@@ -96,7 +113,6 @@ operations.forEach(button => {
 })
 
 equalsButton.addEventListener('click', function(){
-    console.log(currentValue)
     calculator.compute()
     calculator.updateDisplay()
 })
